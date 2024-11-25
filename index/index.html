@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PicSocial</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    .container { padding: 20px; max-width: 600px; margin: auto; }
+    .post { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+    img { max-width: 100%; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>PicSocial</h1>
+
+    <form id="postForm">
+      <input type="text" id="username" placeholder="Your username" required><br><br>
+      <input type="file" id="image" required><br><br>
+      <textarea id="caption" placeholder="Caption"></textarea><br><br>
+      <button type="submit">Post</button>
+    </form>
+
+    <h2>Feed</h2>
+    <div id="feed"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('postForm');
+    const feed = document.getElementById('feed');
+
+    // Load Posts
+    async function loadPosts() {
+      const res = await fetch('http://localhost:5000/posts');
+      const posts = await res.json();
+      feed.innerHTML = posts.map(post => `
+        <div class="post">
+          <img src="http://localhost:5000${post.imageUrl}" alt="Post image">
+          <p>${post.caption}</p>
+          <small>Posted by ${post.username} on ${new Date(post.createdAt).toLocaleString()}</small>
+        </div>
+      `).join('');
+    }
+
+    // Submit Post
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData();
+      formData.append('username', document.getElementById('username').value);
+      formData.append('image', document.getElementById('image').files[0]);
+      formData.append('caption', document.getElementById('caption').value);
+
+      await fetch('http://localhost:5000/posts', {
+        method: 'POST',
+        body: formData,
+      });
+
+      form.reset();
+      loadPosts();
+    });
+
+    loadPosts();
+  </script>
+</body>
+</html>
